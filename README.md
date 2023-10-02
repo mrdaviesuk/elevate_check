@@ -4,7 +4,9 @@ It is forked from the original elevate_check.py to broaden the scope of it's cap
 It may be used in UAC privilege escalation scenarios to identify where "allowElevate"==True, as was the original purpose of the script
 For more detailed info read:  [Bypassing Windows User Account Control (UAC) and ways of mitigation](https://www.greyhathacker.net/?p=796) 
 
-It may also be used to describe or search for the requestedExecution (asInvoker,highestAvailable,requireAdministrator) of an executable, which informs the behavior of the execution for Windows Administrators and Standard Users.
+It may also be used to describe or search for the requestedExecution (asInvoker,highestAvailable,requireAdministrator) of an executable, which informs the behavior of elevation and UAC for Windows Administrators and Standard Users. Whether uiaccess is enabled can also be returned and filtered for. 
+
+All results can be exported to CSV for later review, in addition to the console output.
     
 ### Requirements
 -----------------------------
@@ -20,7 +22,7 @@ It may also be used to describe or search for the requestedExecution (asInvoker,
 	
 ### Usage
 -----------------------------
-usage: elevate_check.py [-h] [-d DIRECTORY] [-r] [-i] [-la] [-le] [-el] [-su]
+usage: elevate_check.py [-h] [-d DIRECTORY] [-r] [-i] [-la] [-le] [-el] [-ua] [-su] [-e]
 
 optional arguments:
   -h, show this help message and exit
@@ -37,7 +39,11 @@ optional arguments:
 
   -el&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Specify a filter for the executionLevel(s) as a comma separated list.
   
-  -su&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Shows the uiacess setting in the executionLevel output table.
+  -ua&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Shows the uiacess setting in the executionLevel output table.
+
+  -su&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Specify the uiaccess value to filter for (true/false).
+
+  -e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Triggers CSV export, by specifying the Folder Path to export results into CSV file(s).
 
 ### Output
 ----------------------------

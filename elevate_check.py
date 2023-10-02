@@ -4,6 +4,8 @@ import sys
 import pefile 
 import argparse
 import warnings
+import csv
+import os.path
 from tabulate import tabulate  
 from bs4 import BeautifulSoup as BS
 from bs4 import Comment
@@ -22,7 +24,7 @@ ver = platform.platform()
 autotable = []
 exectable = []
 
-# XML Parsing for Manufist is preferable but requires lxml - so HTML parser is used but throws warnings which need to be suppressed
+# XML Parsing for Manifest is preferable but requires lxml - so HTML parser is used but throws warnings which need to be suppressed
 warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
 
 def list_all_files(root, pattern, recursive):
@@ -53,7 +55,7 @@ def get_data(manifest, fname, ignore_ms):
                         description = desc.string
                     else:
                         description = ''
-                    comments = soup.findAll(text=lambda text: isinstance(text, Comment))
+                    comments = soup.findAll(string=lambda string: isinstance(string, Comment))
                     for comment in comments:
                         if "Copyright" in comment:
                             manufacturer = comment.strip()
@@ -68,7 +70,7 @@ def get_data(manifest, fname, ignore_ms):
         if list_execution == True:
             if level:
                 rel= level.attrs['level']
-                if level.find('uiaccess'):
+                if level.get('uiaccess'):
                     ui= level.attrs['uiaccess']
                 else:
                     ui='Undefined'
@@ -85,15 +87,17 @@ def get_data(manifest, fname, ignore_ms):
                             if 'microsoft' in manufacturer.lower():
                                 if not ignore_ms:
                                     if show_uiaccess:
-                                        text = "%s,%s,%s,%s,%s" % (fname, rel, ui, description, manufacturer)
-                                        exectable.append(text.split(','))
+                                        if ui.lower() in uiaccess_option.lower():
+                                            text = "%s,%s,%s,%s,%s" % (fname, rel, ui, description, manufacturer)
+                                            exectable.append(text.split(','))
                                     else:
                                         text = "%s,%s,%s,%s" % (fname, rel, description, manufacturer)
                                         exectable.append(text.split(','))
                             else:
                                 if show_uiaccess:
-                                    text = "%s,%s,%s,%s,%s" % (fname, rel, ui, description, manufacturer)
-                                    exectable.append(text.split(','))
+                                    if ui.lower() in uiaccess_option.lower():
+                                        text = "%s,%s,%s,%s,%s" % (fname, rel, ui, description, manufacturer)
+                                        exectable.append(text.split(','))
                                 else:
                                     text = "%s,%s,%s,%s" % (fname, rel, description, manufacturer)
                                     exectable.append(text.split(','))
@@ -120,10 +124,12 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--directory', help='Target directory.', default="C:\\Windows\\System32")
     parser.add_argument('-r', '--recursive', help='Scan Sub-folders as well.', action='store_false')
     parser.add_argument('-i', '--ignore-ms', help='Ignore files manufactured by Microsoft.', action='store_true')
-    parser.add_argument('-la', '--list-auto', help='List the Auto Elevate Applications', action='store_false')
+    parser.add_argument('-la', '--list-auto', help='List the Auto Elevate Applications', action='store_true')
     parser.add_argument('-le', '--list-execution', help='List the Requested Execution Level', action='store_false')
     parser.add_argument('-el', '--execution-level', help='Specify the Execution Level to filter for (Default: asInvoker,highestAvailable,requireAdministrator)', default='asInvoker,highestAvailable,requireAdministrator')
     parser.add_argument('-su', '--show-uiaccess', help='Show uiaccess value, when outputting Requested Execution Level', action='store_true')
+    parser.add_argument('-uo', '--uiaccess-option', help='Specify the uiaccess value to filter for', default='true,false,Undefined')
+    parser.add_argument('-e', '--export-csv', help='Triggers CSV export, by specifying the Folder Path to export results into CSV file(s).')
     args = vars(parser.parse_args())
 
     directory = args['directory']
@@ -133,6 +139,8 @@ if __name__ == '__main__':
     list_execution = args['list_execution']
     execution_level = args['execution_level']
     show_uiaccess = args['show_uiaccess']
+    uiaccess_option = args['uiaccess_option']
+    export_csv = args['export_csv']
     
     print('\nPlease wait, it can take some time...')
     filenames = list_all_files(directory, "*.exe", recursive)
@@ -149,6 +157,11 @@ if __name__ == '__main__':
         print ('\n\n[!] Total AutoElevate Applications found: %d' % len(autotable))
         headers = ['File', 'Description', 'Manufacturer']
         print (tabulate(autotable, headers, tablefmt='grid'))
+        if export_csv:
+            with open (os.path.join(export_csv,'autoElevate.csv'),'w', newline="") as autofile:
+                write = csv.writer(autofile)
+                write.writerow(headers)
+                write.writerows(autotable)
 
     if len(exectable) != 0:
         print ('\n\n[!] Total Applications with Specified Elevation Level found: %d' % len(exectable))
@@ -157,5 +170,10 @@ if __name__ == '__main__':
         else:
             headers = ['File', 'Execution Level', 'Description', 'Manufacturer']
         print (tabulate(exectable, headers, tablefmt='grid'))
-
-    sys.exit('\n\n[!] Done.\n\n')
+        if export_csv:
+            with open (os.path.join(export_csv,'executionLevel.csv'),'w', newline="") as execfile:
+                write = csv.writer(execfile)
+                write.writerow(headers)
+                write.writerows(exectable)
+    
+sys.exit('\n\n[!] Done.\n\n')
